@@ -71,12 +71,12 @@ namespace DataLogger
         class TimeData
         {
             public string TimeStamp { get; set; }
-            public string TestData { get; set; }
+            public float  TestData { get; set; }
             public float Diff { get; set; }
             public float Elapse { get; set; }
 
 
-            public TimeData(DateTime currentTime, string data1, float elapse, float diff)
+            public TimeData(DateTime currentTime, float data1, float elapse, float diff)
             {
            
                 TimeStamp = currentTime.ToString("HH:mm:ss.fff");
@@ -89,6 +89,8 @@ namespace DataLogger
         }
         int interval;
         public delegate void TimeLoop(long TimeData, string data);
+        public delegate void Calculation();
+        public Calculation cal;
         public TimeLoop myDelegate;
         System.Timers.Timer timer = null;
         DateTime PrevTime;
@@ -104,11 +106,14 @@ namespace DataLogger
         private readonly MicroLibrary.MicroTimer _microTimer;
         MicroLibrary.MicroStopwatch _microStopwatch;
         List<double> testdatalst;
+        List<TimeData> expData;
+        System.Timers.Timer calTimer = null;
 
         public MainWindow()
         {
             InitializeComponent();
             myDelegate = new TimeLoop(updateData);
+            cal = new Calculation(GetInstFlowRate);
             string[] ports = SerialPort.GetPortNames();
             foreach (string port in ports)
             {
@@ -121,11 +126,10 @@ namespace DataLogger
             }
 
             cmbDelimiter.SelectedIndex = 0;
-            testdatalst = new List<double>();
-
+            expData = new List<TimeData>();
             stopwatch = new Stopwatch();
-            serialMonitor = new SerialPort();
 
+            serialMonitor = new SerialPort();
             serialMonitor.BaudRate = 9600;
             serialMonitor.Handshake = System.IO.Ports.Handshake.None;
             serialMonitor.Parity = Parity.None;
@@ -133,8 +137,10 @@ namespace DataLogger
             serialMonitor.StopBits = StopBits.One;
             serialMonitor.ReadTimeout = 200;
             serialMonitor.WriteTimeout = 50;
-
-           
+            
+            calTimer = new System.Timers.Timer();
+            calTimer.Interval = 1000;
+            calTimer.Elapsed += new System.Timers.ElapsedEventHandler(timer_Elapsed);
 
             _microStopwatch = new MicroLibrary.MicroStopwatch();
 
@@ -163,11 +169,20 @@ namespace DataLogger
                 }
                 else
                 {
-                    Dispatcher.BeginInvoke(myDelegate, _microStopwatch.ElapsedMicroseconds, received_data);
+                    Dispatcher.BeginInvoke(myDelegate,_microStopwatch.ElapsedMicroseconds,received_data);
                 }
 
             }
 
+
+        }
+
+
+          void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+
+            Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.SystemIdle, cal);
+            
 
         }
 
@@ -186,6 +201,7 @@ namespace DataLogger
             serialMonitor.DiscardInBuffer();
             serialMonitor.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(Recieve);
 
+            calTimer.Start();
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
         }
@@ -200,7 +216,7 @@ namespace DataLogger
             serialMonitor.DataReceived -= new System.IO.Ports.SerialDataReceivedEventHandler(Recieve);
             _microStopwatch.Stop();
             _microStopwatch.Reset();
-
+            calTimer.Stop();
             btnStart.IsEnabled = true;
             btnStop.IsEnabled = false;
         }
@@ -208,6 +224,7 @@ namespace DataLogger
 
         private void updateData(long elaspedTime, string data)
         {
+            float data1 = float.Parse(data);
 
             prevelapse = currentelapse;
 
@@ -223,14 +240,26 @@ namespace DataLogger
             
             currentT = StartT.AddMilliseconds(currentelapse);
 
-            this.lstData.Items.Add(new TimeData(currentT, data, currentelapse, (currentelapse - prevelapse)));
+            expData.Add(new TimeData(currentT, data1, currentelapse, (currentelapse - prevelapse)));
 
-            lstData.ScrollIntoView(lstData.Items.GetItemAt(lstData.Items.Count - 1));
+            lblDataCount.Content = expData.Count;
+            
+            //if (expData.Count > 5)
+            //{
+            //    lblFlowRate.Content = GetInstFlowRate(expData);
+            //}
+
+ //           TestFunction();
+            
+
+//            this.lstData.Items.Add(new TimeData(currentT, data, currentelapse, (currentelapse - prevelapse)));
+
+//            lstData.ScrollIntoView(lstData.Items.GetItemAt(lstData.Items.Count - 1));
         }
 
         private void btnClear_Click(object sender, RoutedEventArgs e)
         {
-            lstData.Items.Clear();
+//            lstData.Items.Clear();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -320,9 +349,9 @@ namespace DataLogger
 
                     sw.Write(sw.NewLine);
 
-                    for (int i = 0; i < lstData.Items.Count - 1; i++)
+                    for (int i = 0; i < expData.Count - 1; i++)
                     {
-                        TimeData dataitem = (TimeData)lstData.Items.GetItemAt(i);
+                        TimeData dataitem = (TimeData)expData.ElementAt(i);
 
                         sw.Write(dataitem.TimeStamp.ToString());
 
@@ -360,6 +389,35 @@ namespace DataLogger
             selectedDelimiter = delimited[cmbDelimiter.SelectedIndex];
         }
 
+        private void GetInstFlowRate()
+        {
+            int count = expData.Count;
+
+            float result = 0;
+
+            result = (expData.ElementAt(count - 1).TestData - expData.ElementAt(count - 2).TestData) / (expData.ElementAt(count - 1).Elapse - expData.ElementAt(count - 2).Elapse);
+
+            lblFlowRate.Content = result;
+            
+        }
+
+
+        private void TestFunction()
+        {
+            long seed = Environment.TickCount;
+            long result = seed;
+            long count = 100000;
+            for (int i = 0; i < count; ++i)
+            {
+                result ^= i ^ seed; // Some useless bit operations
+            }
+
+            Random rnd = new Random();
+
+            double n = rnd.NextDouble();
+
+            lblFlowRate.Content = n;
+        }
 
     }
 }
