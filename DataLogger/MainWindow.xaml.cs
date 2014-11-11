@@ -491,7 +491,7 @@ namespace DataLogger
 
                 U_final = Math.Sqrt(Math.Pow(Umrdg, 2) + Math.Pow(Uimpurity, 2) + Math.Pow(Uhumidity, 2) + Math.Pow(Umassrep, 2) + Math.Pow(Utimerep, 2) + Math.Pow(Usysrep, 2));
 
-                lbluncer.Content = U_final;
+                lbluncer.Content = U_final.ToString("G4");
             }
         }
 
@@ -561,7 +561,7 @@ namespace DataLogger
 
                                     expData.Add(new TimeData(dT1, mass, ds.TotalMilliseconds, (currentElapse - prevElapse)));
 
-                                    Point p1 = new Point(ds.TotalMilliseconds, mass);
+                                    Point p1 = new Point(ds.TotalMilliseconds / 1000, mass);
                                     source1.AppendAsync(Dispatcher, p1);
                                 }
                                 else

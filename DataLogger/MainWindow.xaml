@@ -43,8 +43,8 @@
             <d3:ChartPlotter.HorizontalAxis>
                 <d3:HorizontalTimeSpanAxis Name="timeAxis"/>
             </d3:ChartPlotter.HorizontalAxis>
-            <d3:VerticalAxisTitle FontFamily="Arial" Content="Count"/>
-            <d3:HorizontalAxisTitle FontFamily="Arial" Content="Date"/>
+            <d3:VerticalAxisTitle FontFamily="Arial" Content="Data"/>
+            <d3:HorizontalAxisTitle FontFamily="Arial" Content="Time"/>
         </d3:ChartPlotter>
 
     </Grid>
