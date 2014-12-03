@@ -7,7 +7,7 @@
         Title="MainWindow" Height="536" Width="581.5">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Margin="15,448.98,0,0" VerticalAlignment="Top" Width="85" Height="35.02" Click="btnStart_Click" RenderTransformOrigin="0.549,-0.942" IsEnabled="False"/>
         <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="105,448.98,0,0" VerticalAlignment="Top" Width="85" Height="35.02" Click="btnStop_Click" IsEnabled="False"/>
